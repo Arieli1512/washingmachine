@@ -35,4 +35,13 @@ class WashingMachineTest {
         assertEquals(laundryReturnStatus, washingMashine.start(laundryBatch,programConfiguration));
     }
 
+    @Test
+    void laundryFailedWithTooHeavyError(){
+        Material material = Material.JEANS;
+        Program program = Program.MEDIUM;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(11).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.FAILURE).withErrorCode(ErrorCode.TOO_HEAVY).withRunnedProgram(null).build();
+        assertEquals(laundryReturnStatus, washingMashine.start(laundryBatch,programConfiguration));
+    }
 }
