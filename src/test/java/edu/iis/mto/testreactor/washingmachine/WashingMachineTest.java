@@ -3,8 +3,7 @@ package edu.iis.mto.testreactor.washingmachine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +68,7 @@ class WashingMachineTest {
         assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
     }
     @Test
-    void dirtDetectorSetProgramToLong() throws Exception {
+    void dirtDetectorSetProgramToLong() {
         when(dirtDetector.detectDirtDegree(any(LaundryBatch.class))).thenReturn(new Percentage(60));
         Material material = Material.JEANS;
         Program program = Program.AUTODETECT;
@@ -80,7 +79,7 @@ class WashingMachineTest {
     }
 
     @Test
-    void dirtDetectorSetProgramToMedium() throws Exception {
+    void dirtDetectorSetProgramToMedium() {
         when(dirtDetector.detectDirtDegree(any(LaundryBatch.class))).thenReturn(new Percentage(12));
         Material material = Material.JEANS;
         Program program = Program.AUTODETECT;
@@ -88,5 +87,19 @@ class WashingMachineTest {
         ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
         LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.SUCCESS).withErrorCode(ErrorCode.NO_ERROR).withRunnedProgram(Program.MEDIUM).build();
         assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
+    }
+
+    @Test
+    void engineAndWaterPompWorksFine() throws EngineException, WaterPumpException {
+        when(dirtDetector.detectDirtDegree(any(LaundryBatch.class))).thenReturn(new Percentage(12));
+        Material material = Material.JEANS;
+        Program program = Program.AUTODETECT;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(2).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.SUCCESS).withErrorCode(ErrorCode.NO_ERROR).withRunnedProgram(Program.MEDIUM).build();
+        washingMachine.start(laundryBatch,programConfiguration);
+        verify(engine,times(1)).runWashing(any(int.class));
+        verify(waterPump,times(1)).pour(any(double.class));
+        verify(waterPump,times(1)).release();
     }
 }
