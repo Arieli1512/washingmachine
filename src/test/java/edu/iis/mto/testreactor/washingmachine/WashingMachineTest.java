@@ -49,13 +49,44 @@ class WashingMachineTest {
     }
 
     @Test
-    void waterPumErrorLaundryFailed() throws WaterPumpException {
+    void waterPumErrorSoLaundryFailed() throws WaterPumpException {
        doThrow(new WaterPumpException()).when(waterPump).pour(any(double.class));
         Material material = Material.JEANS;
         Program program = Program.MEDIUM;
         LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(1).withMaterialType(material).build();
         ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
         LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.FAILURE).withErrorCode(ErrorCode.WATER_PUMP_FAILURE).withRunnedProgram(Program.MEDIUM).build();
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
+    }
+    @Test
+    void engineErrorSoLaundryFailed() throws EngineException {
+        doThrow(new EngineException()).when(engine).runWashing(any(int.class));
+        Material material = Material.JEANS;
+        Program program = Program.LONG;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(1).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.FAILURE).withErrorCode(ErrorCode.ENGINE_FAILURE).withRunnedProgram(Program.LONG).build();
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
+    }
+    @Test
+    void dirtDetectorSetProgramToLong() throws Exception {
+        when(dirtDetector.detectDirtDegree(any(LaundryBatch.class))).thenReturn(new Percentage(60));
+        Material material = Material.JEANS;
+        Program program = Program.AUTODETECT;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(2).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.SUCCESS).withErrorCode(ErrorCode.NO_ERROR).withRunnedProgram(Program.LONG).build();
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
+    }
+
+    @Test
+    void dirtDetectorSetProgramToMedium() throws Exception {
+        when(dirtDetector.detectDirtDegree(any(LaundryBatch.class))).thenReturn(new Percentage(12));
+        Material material = Material.JEANS;
+        Program program = Program.AUTODETECT;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(2).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.SUCCESS).withErrorCode(ErrorCode.NO_ERROR).withRunnedProgram(Program.MEDIUM).build();
         assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
     }
 }
