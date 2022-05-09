@@ -2,6 +2,9 @@ package edu.iis.mto.testreactor.washingmachine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,11 +21,11 @@ class WashingMachineTest {
     private Engine engine;
     @Mock
     private WaterPump waterPump;
-    private WashingMachine washingMashine;
+    private WashingMachine washingMachine;
 
     @BeforeEach
     void setUp() {
-        washingMashine = new WashingMachine(dirtDetector, engine, waterPump);
+        washingMachine = new WashingMachine(dirtDetector, engine, waterPump);
     }
 
     @Test
@@ -32,7 +35,7 @@ class WashingMachineTest {
         LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(1).withMaterialType(material).build();
         ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
         LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.SUCCESS).withErrorCode(ErrorCode.NO_ERROR).withRunnedProgram(Program.SHORT).build();
-        assertEquals(laundryReturnStatus, washingMashine.start(laundryBatch,programConfiguration));
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
     }
 
     @Test
@@ -42,6 +45,17 @@ class WashingMachineTest {
         LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(11).withMaterialType(material).build();
         ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
         LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.FAILURE).withErrorCode(ErrorCode.TOO_HEAVY).withRunnedProgram(null).build();
-        assertEquals(laundryReturnStatus, washingMashine.start(laundryBatch,programConfiguration));
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
+    }
+
+    @Test
+    void waterPumErrorLaundryFailed() throws WaterPumpException {
+       doThrow(new WaterPumpException()).when(waterPump).pour(any(double.class));
+        Material material = Material.JEANS;
+        Program program = Program.MEDIUM;
+        LaundryBatch laundryBatch = LaundryBatch.builder().withWeightKg(1).withMaterialType(material).build();
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder().withProgram(program).build();
+        LaundryStatus laundryReturnStatus = LaundryStatus.builder().withResult(Result.FAILURE).withErrorCode(ErrorCode.WATER_PUMP_FAILURE).withRunnedProgram(Program.MEDIUM).build();
+        assertEquals(laundryReturnStatus, washingMachine.start(laundryBatch,programConfiguration));
     }
 }
